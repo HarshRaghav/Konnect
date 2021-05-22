@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "791769637389",
+    "project_id": "konnectme-14bb9",
+    "storage_bucket": "konnectme-14bb9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:791769637389:android:d2a75670db1ec269c4ab44",
+        "android_client_info": {
+          "package_name": "android.example.konnectme"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "791769637389-8gndmnopp6tgbos49mdahr3pbgqbp2gl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "android.example.konnectme",
+            "certificate_hash": "d335a390b44d32ee5042dd4ecd2e769e52118c01"
+          }
+        },
+        {
+          "client_id": "791769637389-hq2a9t76o55cltqvlmc8al26354qe38g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEP6PF6Td3QcP8j93Dcbx3hHv3GZXX94g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "791769637389-hq2a9t76o55cltqvlmc8al26354qe38g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
