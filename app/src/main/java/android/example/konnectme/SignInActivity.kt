@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -24,6 +26,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
+import kotlinx.android.synthetic.main.item_post.*
+import kotlinx.android.synthetic.main.signup_tab_fragment.*
 
 class SignInActivity : AppCompatActivity() {
 
@@ -31,7 +39,11 @@ class SignInActivity : AppCompatActivity() {
     private val TAG = "SignInActivity Tag"
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
+    private lateinit var adapter:FragmentAdapter
+    private lateinit var viewPager:ViewPager2
     private val types="Google"
+    private var boolname=false
+    private var boolimg=false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,10 +56,88 @@ class SignInActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
         auth = Firebase.auth
 
-        signInButton.setOnClickListener {
+        fab_google.setOnClickListener {
 
             signIn()
         }
+        adapter = FragmentAdapter(this)
+        viewPager=findViewById(R.id.view_pager)
+        viewPager.adapter=adapter
+
+        val tabArray = arrayOf("Login","Signup")
+        val tabLayout:TabLayout
+        tabLayout=findViewById(R.id.tab_layout)
+        TabLayoutMediator(tabLayout, viewPager){
+            tab,position -> tab.text=tabArray[position]
+        }.attach()
+    }
+
+    fun signUpMethod(view:View){
+        boolname=true
+        boolimg=true
+        val name=username.text.toString()
+        val email=email.text.toString()
+        val password=password.text.toString()
+        val conPassword = confirm_password.text.toString();
+        if(name.isEmpty()){
+            Toast.makeText(this,"please enter Username ",Toast.LENGTH_SHORT).show()
+        }
+        else if(email.isEmpty()){
+            Toast.makeText(this,"please enter Email ",Toast.LENGTH_SHORT).show()
+        }
+        else if(password.isEmpty()){
+            Toast.makeText(this,"please enter Password ",Toast.LENGTH_SHORT).show()
+        }
+        else if(password.length<=6){
+            Toast.makeText(this,"password length must be greater than 6",Toast.LENGTH_SHORT).show()
+        }
+        else if(conPassword.isEmpty()){
+            Toast.makeText(this,"please enter Password ",Toast.LENGTH_SHORT).show()
+        }
+        else if(password!=conPassword){
+            Toast.makeText(this,"passwords don't match",Toast.LENGTH_SHORT).show()
+        }
+        else{
+            auth.createUserWithEmailAndPassword(email.trim(),password).addOnCompleteListener(this){
+                task ->
+                if(task.isSuccessful){
+                    val user=auth.currentUser
+                    updateUI(user)
+                }
+                else{
+                    if(task.exception.toString()=="com.google.firebase.auth.FirebaseAuthUserCollisionException: The email address is already in use by another account."){
+                        Toast.makeText(this,"Email address already in use",Toast.LENGTH_SHORT).show()
+                    }
+                    else {
+                        Toast.makeText(this, "invalid email or password", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    fun logInMethod(view:View){
+        val email=email.text.toString()
+        val password=password.text.toString()
+        if(email.isEmpty()){
+            Toast.makeText(this,"please enter Email ",Toast.LENGTH_SHORT).show()
+        }
+        else if(password.isEmpty()){
+            Toast.makeText(this,"please enter Password ",Toast.LENGTH_SHORT).show()
+        }
+        else{
+            auth.signInWithEmailAndPassword(email.trim(),password).addOnCompleteListener(this){
+                task ->
+                if(task.isSuccessful){
+                    val user=auth.currentUser
+                    updateUI(user)
+                }
+                else{
+                    Toast.makeText(this,"invalid email or password",Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
     }
 
     override fun onStart() {
@@ -84,7 +174,7 @@ class SignInActivity : AppCompatActivity() {
 
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        signInButton.visibility = View.GONE
+        fab_google.visibility = View.GONE
         progressBar.visibility = View.VISIBLE
         GlobalScope.launch(Dispatchers.IO) {
             val auth = auth.signInWithCredential(credential).await()
@@ -98,8 +188,16 @@ class SignInActivity : AppCompatActivity() {
 
     private fun updateUI(firebaseUser: FirebaseUser?) {
         if(firebaseUser != null) {
+            var name=firebaseUser.displayName
+            var imgUrl= firebaseUser.photoUrl.toString()
+            if(boolname){
+                name=username.text.toString()
+            }
+            if(boolimg){
+                imgUrl="https://firebasestorage.googleapis.com/v0/b/konnectme-14bb9.appspot.com/o/acc.png?alt=media&token=76ed907c-c4fc-4416-987f-a165e842de82"
+            }
 
-            val user = User(firebaseUser.uid, firebaseUser.displayName, firebaseUser.photoUrl.toString())
+            val user = User(firebaseUser.uid,name,imgUrl)
             val usersDao = UserDao()
             usersDao.addUser(user)
 
@@ -107,7 +205,7 @@ class SignInActivity : AppCompatActivity() {
             startActivity(mainActivityIntent)
             finish()
         } else {
-            signInButton.visibility = View.VISIBLE
+            fab_google.visibility = View.VISIBLE
             progressBar.visibility = View.GONE
         }
     }
